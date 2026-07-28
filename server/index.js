@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 import { connectDB } from './config/db.js';
 
 // Load routes
@@ -17,10 +19,43 @@ connectDB();
 
 const app = express();
 
+// Secure CORS configuration allowing HttpOnly credentials cookies exchange
+const corsOptions = {
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', // Explicit source
+  credentials: true, // Required to permit access cookie header passing
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 // Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser()); // Extracts cookies from header payload
 app.use(morgan('dev'));
+
+// Rate Limiting Config: Mitigate Brute Force & DoS attacks
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per 15 minutes
+  message: { message: 'Too many requests from this IP, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Stricter limit of 10 login/register requests per IP per 15 mins
+  message: { message: 'Too many authentication attempts. Please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Apply global rate limiting to all API routes
+app.use('/api/', apiLimiter);
+
+// Route mapping with strict rate limiter on auth
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/interviews', interviewRoutes);
 
 // API Health Check
 app.get('/api/health', (req, res) => {
@@ -44,11 +79,6 @@ const mongooseState = () => {
   return states[mongoose.connection.readyState] || 'Unknown';
 };
 
-// Route Mapping
-app.use('/api/auth', authRoutes);
-app.use('/api/resumes', resumeRoutes);
-app.use('/api/interviews', interviewRoutes);
-
 // 404 Route handler
 app.use((req, res, next) => {
   res.status(404).json({ message: `API Route Not Found - ${req.originalUrl}` });
@@ -57,6 +87,7 @@ app.use((req, res, next) => {
 // Global Error middleware
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  // Never expose sensitive stack details in production logs/responses
   res.status(statusCode).json({
     message: err.message,
     stack: process.env.NODE_ENV === 'production' ? null : err.stack

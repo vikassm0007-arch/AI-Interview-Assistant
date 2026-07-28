@@ -12,21 +12,38 @@ export const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkeyforintervueai');
 
-      // Get user from token
-      req.user = await User.findById(decoded.id).select('-password');
+      // Attach user details (excluding hashed credentials) to the request context
+      req.user = await User.findById(decoded.id).select('-password -refreshTokens');
 
       if (!req.user) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
+        return res.status(401).json({ message: 'Authorization revoked, owner profile no longer exists' });
       }
 
       next();
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      console.error(`JWT Verification Failed: ${error.message}`);
+      
+      // Expired access token response
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          message: 'Access token has expired', 
+          code: 'TOKEN_EXPIRED' 
+        });
+      }
+      
+      // Malformed / tampered token response
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ 
+          message: 'Malformed or invalid access token', 
+          code: 'TOKEN_INVALID' 
+        });
+      }
+
+      return res.status(401).json({ message: 'Not authorized, token validation failed' });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token provided' });
+    return res.status(401).json({ message: 'Not authorized, no token provided' });
   }
 };
