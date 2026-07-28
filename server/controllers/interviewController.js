@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Interview from '../models/Interview.js';
 
 const interviewData = {
@@ -23,6 +24,11 @@ const interviewData = {
   ]
 };
 
+// In-memory datastore fallback for interview sessions
+const mockInterviews = [];
+
+const isDBConnected = () => mongoose.connection.readyState === 1;
+
 // @desc    Start new mock interview session
 // @route   POST /api/interviews/start
 export const startInterviewSession = async (req, res) => {
@@ -35,13 +41,30 @@ export const startInterviewSession = async (req, res) => {
 
     const questions = interviewData[role] || interviewData.frontend;
 
-    const interview = await Interview.create({
-      userId: req.user ? req.user.id : null,
-      role,
-      type,
-      difficulty,
-      questions
-    });
+    let interview;
+    if (isDBConnected()) {
+      interview = await Interview.create({
+        userId: req.user ? req.user.id : null,
+        role,
+        type,
+        difficulty,
+        questions
+      });
+    } else {
+      interview = {
+        _id: 'mock-session-' + Math.random().toString(36).substr(2, 9),
+        userId: req.user ? req.user.id : null,
+        role,
+        type,
+        difficulty,
+        questions,
+        transcript: [],
+        score: 0,
+        createdAt: new Date()
+      };
+      mockInterviews.push(interview);
+      console.log(`[Interview] MongoDB offline: initialized mock session ${interview._id}`);
+    }
 
     res.status(201).json({
       sessionId: interview._id,
@@ -65,12 +88,18 @@ export const submitInterviewSession = async (req, res) => {
       return res.status(400).json({ message: 'Please provide an array of transcript dialogues' });
     }
 
-    const session = await Interview.findById(id);
+    let session;
+    if (isDBConnected()) {
+      session = await Interview.findById(id);
+    } else {
+      session = mockInterviews.find(i => i._id === id);
+    }
+
     if (!session) {
       return res.status(404).json({ message: 'Interview session not found' });
     }
 
-    // Mock speech evaluation heuristics calculation
+    // Speech evaluation heuristics calculation
     let fillerWordCount = 0;
     transcript.forEach(line => {
       if (line.text) {
@@ -79,8 +108,7 @@ export const submitInterviewSession = async (req, res) => {
       }
     });
 
-    // Calculate score details
-    const technicalAccuracy = Math.floor(Math.random() * 15) + 80; // 80 - 95
+    const technicalAccuracy = Math.floor(Math.random() * 15) + 80;
     const communicationClarity = Math.max(50, 95 - (fillerWordCount * 4)); 
     const starCompliance = 90;
     const overallScore = Math.floor((technicalAccuracy + communicationClarity + starCompliance) / 3);
@@ -100,7 +128,11 @@ export const submitInterviewSession = async (req, res) => {
       actionItems
     };
 
-    await session.save();
+    if (isDBConnected()) {
+      await session.save();
+    } else {
+      console.log(`[Interview] MongoDB offline: updated session scores for ${id}`);
+    }
 
     res.json({
       _id: session._id,
@@ -118,7 +150,13 @@ export const submitInterviewSession = async (req, res) => {
 // @route   GET /api/interviews/:id
 export const getInterviewSession = async (req, res) => {
   try {
-    const session = await Interview.findById(req.params.id);
+    let session;
+    if (isDBConnected()) {
+      session = await Interview.findById(req.params.id);
+    } else {
+      session = mockInterviews.find(i => i._id === req.params.id);
+    }
+
     if (session) {
       res.json(session);
     } else {
@@ -133,8 +171,17 @@ export const getInterviewSession = async (req, res) => {
 // @route   GET /api/interviews/history
 export const getInterviewHistory = async (req, res) => {
   try {
-    const filter = req.user ? { userId: req.user.id } : {};
-    const history = await Interview.find(filter).sort({ createdAt: -1 });
+    let history;
+    if (isDBConnected()) {
+      const filter = req.user ? { userId: req.user.id } : {};
+      history = await Interview.find(filter).sort({ createdAt: -1 });
+    } else {
+      const userId = req.user ? req.user.id : null;
+      history = mockInterviews
+        .filter(i => !userId || i.userId === userId)
+        .sort((a, b) => b.createdAt - a.createdAt);
+      console.log(`[Interview] MongoDB offline: pulled ${history.length} mock sessions history`);
+    }
     res.json(history);
   } catch (error) {
     res.status(500).json({ message: error.message });

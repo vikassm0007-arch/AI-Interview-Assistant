@@ -1,11 +1,32 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 
 // Configuration keys from environment
-const ACCESS_TOKEN_EXPIRY = '15m'; // Short-lived access token
+const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 const REFRESH_COOKIE_NAME = 'jid';
+
+// In-Memory fallback database for testing without active local MongoDB daemon
+const mockUsers = [
+  {
+    _id: 'mock-user-123',
+    name: 'Vikas S.',
+    email: 'vikas@example.com',
+    password: '', // Initialized at startup
+    credits: 8,
+    targetJobTitle: 'Frontend Developer',
+    experienceLevel: 'mid',
+    refreshTokens: []
+  }
+];
+
+// Hash mock user credentials at server boot
+bcrypt.hash('Password@123', 12).then(hash => {
+  mockUsers[0].password = hash;
+  console.log('[Auth] In-memory mock user password pre-hashed successfully');
+});
 
 // Token generation helpers
 const generateAccessToken = (id, role = 'candidate') => {
@@ -20,15 +41,17 @@ const generateRefreshToken = (id) => {
   });
 };
 
-// Cookie options configurator based on environment security requirements
 const getRefreshCookieOptions = () => {
   return {
-    httpOnly: true, // Prevents XSS scripting access to cookie
-    secure: process.env.NODE_ENV === 'production', // Requires HTTPS link in production
-    sameSite: 'strict', // Mitigates CSRF requests hijacking
-    maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000 // 7 days in ms
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000 // 7 days
   };
 };
+
+// Check if database connection is fully active
+const isDBConnected = () => mongoose.connection.readyState === 1;
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -36,7 +59,6 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password, targetJobTitle, experienceLevel } = req.body;
 
-    // 1. Sanitization & Payload Checks
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
@@ -44,7 +66,7 @@ export const registerUser = async (req, res) => {
     const sanitizedEmail = email.trim().toLowerCase();
     const sanitizedName = name.trim();
 
-    // 2. Strict Password Validation Criteria
+    // Password validation rules
     if (password.length < 8) {
       return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
@@ -61,37 +83,63 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'Password must contain at least one special character' });
     }
 
-    // 3. Email Conflict Check
-    const userExists = await User.findOne({ email: sanitizedEmail });
-    if (userExists) {
+    // Email Conflict Check
+    let emailConflict = false;
+    if (isDBConnected()) {
+      const userExists = await User.findOne({ email: sanitizedEmail });
+      if (userExists) emailConflict = true;
+    } else {
+      const userExists = mockUsers.find(u => u.email === sanitizedEmail);
+      if (userExists) emailConflict = true;
+    }
+
+    if (emailConflict) {
       return res.status(409).json({ message: 'An account is already registered with this email address' });
     }
 
-    // 4. Password Encryption
-    const salt = await bcrypt.genSalt(12); // Production-grade work factor
+    // Encrypt password
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 5. Database registration
-    const user = await User.create({
-      name: sanitizedName,
-      email: sanitizedEmail,
-      password: hashedPassword,
-      targetJobTitle: targetJobTitle ? targetJobTitle.trim() : '',
-      experienceLevel: experienceLevel || ''
-    });
+    let user;
+    if (isDBConnected()) {
+      user = await User.create({
+        name: sanitizedName,
+        email: sanitizedEmail,
+        password: hashedPassword,
+        targetJobTitle: targetJobTitle ? targetJobTitle.trim() : '',
+        experienceLevel: experienceLevel || ''
+      });
+    } else {
+      // Offline fallback registration
+      user = {
+        _id: 'mock-user-' + Math.random().toString(36).substr(2, 9),
+        name: sanitizedName,
+        email: sanitizedEmail,
+        password: hashedPassword,
+        credits: 8,
+        targetJobTitle: targetJobTitle ? targetJobTitle.trim() : '',
+        experienceLevel: experienceLevel || '',
+        refreshTokens: []
+      };
+      mockUsers.push(user);
+      console.log(`[Auth] MongoDB offline: registered ${sanitizedEmail} in-memory`);
+    }
 
     if (user) {
       const accessToken = generateAccessToken(user._id, 'candidate');
       const refreshToken = generateRefreshToken(user._id);
 
-      // Save refresh token to database
-      user.refreshTokens.push(refreshToken);
-      await user.save();
+      // Save token to session list
+      if (isDBConnected()) {
+        user.refreshTokens.push(refreshToken);
+        await user.save();
+      } else {
+        user.refreshTokens.push(refreshToken);
+      }
 
-      // Expose refresh token in secure HttpOnly cookie
       res.cookie(REFRESH_COOKIE_NAME, refreshToken, getRefreshCookieOptions());
 
-      // Return sanitized user details + short-lived access token
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -120,19 +168,22 @@ export const loginUser = async (req, res) => {
     }
 
     const sanitizedEmail = email.trim().toLowerCase();
+    let user;
 
-    // Fetch user record
-    const user = await User.findOne({ email: sanitizedEmail });
+    // Fetch user record depending on DB availability state
+    if (isDBConnected()) {
+      user = await User.findOne({ email: sanitizedEmail });
+    } else {
+      user = mockUsers.find(u => u.email === sanitizedEmail);
+    }
 
-    // Timing-attack mitigation: if user does not exist, run a dummy bcrypt validation
-    // to match execution path times and prevent account enumeration techniques.
+    // Timing-attack mitigation
     if (!user) {
       const dummyHash = '$2b$12$N9qo8uLOqpGC1234567890abcdefghijklmnopqrstuvwxyz12';
       await bcrypt.compare(password, dummyHash);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Validate password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -141,11 +192,14 @@ export const loginUser = async (req, res) => {
     const accessToken = generateAccessToken(user._id, 'candidate');
     const refreshToken = generateRefreshToken(user._id);
 
-    // Save refresh token in database for session tracking & revocation
-    user.refreshTokens.push(refreshToken);
-    await user.save();
+    // Track active token rotation
+    if (isDBConnected()) {
+      user.refreshTokens.push(refreshToken);
+      await user.save();
+    } else {
+      user.refreshTokens.push(refreshToken);
+    }
 
-    // Set HttpOnly refresh token cookie
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, getRefreshCookieOptions());
 
     res.json({
@@ -179,21 +233,23 @@ export const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ message: 'Expired or invalid session token' });
     }
 
-    const user = await User.findById(decoded.id);
+    let user;
+    if (isDBConnected()) {
+      user = await User.findById(decoded.id);
+    } else {
+      user = mockUsers.find(u => u._id === decoded.id);
+    }
+
     if (!user) {
       return res.status(401).json({ message: 'Session owner record not found' });
     }
 
-    // Revocation check: verify if token exists in user database list
     if (!user.refreshTokens.includes(token)) {
-      // Possible token reuse attack or invalid session. Clear cookie.
       res.clearCookie(REFRESH_COOKIE_NAME);
       return res.status(403).json({ message: 'Invalid or revoked session access' });
     }
 
-    // Issue new access token
     const newAccessToken = generateAccessToken(user._id, 'candidate');
-
     res.json({ accessToken: newAccessToken });
   } catch (error) {
     res.status(500).json({ message: 'Failed to rotate session access' });
@@ -207,16 +263,22 @@ export const logoutUser = async (req, res) => {
     const token = req.cookies[REFRESH_COOKIE_NAME];
     
     if (token) {
-      // Decode user context to remove session token from database
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkeyforintervueai');
-        const user = await User.findById(decoded.id);
-        if (user) {
-          user.refreshTokens = user.refreshTokens.filter(t => t !== token);
-          await user.save();
+        if (isDBConnected()) {
+          const user = await User.findById(decoded.id);
+          if (user) {
+            user.refreshTokens = user.refreshTokens.filter(t => t !== token);
+            await user.save();
+          }
+        } else {
+          const user = mockUsers.find(u => u._id === decoded.id);
+          if (user) {
+            user.refreshTokens = user.refreshTokens.filter(t => t !== token);
+          }
         }
       } catch (err) {
-        // Continue logout anyway to clear cookie
+        // Clear locally anyway
       }
     }
 
@@ -231,7 +293,17 @@ export const logoutUser = async (req, res) => {
 // @route   GET /api/auth/profile
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password -refreshTokens');
+    let user;
+    if (isDBConnected()) {
+      user = await User.findById(req.user.id).select('-password -refreshTokens');
+    } else {
+      const u = mockUsers.find(x => x._id === req.user.id);
+      if (u) {
+        const { password, refreshTokens, ...sanitized } = u;
+        user = sanitized;
+      }
+    }
+
     if (user) {
       res.json(user);
     } else {
