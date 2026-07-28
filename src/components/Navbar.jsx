@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Bot, Menu, X, LayoutDashboard, UploadCloud, GraduationCap, DollarSign, Play, Briefcase, Sun, Moon, User, Settings, LogOut, ChevronDown, Sparkles } from 'lucide-react';
+import { apiFetch } from '../api';
 
 export default function Navbar({ theme, toggleTheme, isLoggedIn, setIsLoggedIn }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,9 +31,13 @@ export default function Navbar({ theme, toggleTheme, isLoggedIn, setIsLoggedIn }
 
   const handleSignOut = () => {
     setShowProfile(false);
-    setIsLoggedIn(false);
-    localStorage.removeItem('isLoggedIn');
-    navigate('/login');
+    apiFetch('/auth/logout', { method: 'POST' })
+      .finally(() => {
+        setIsLoggedIn(false);
+        localStorage.removeItem('token');
+        localStorage.removeItem('isLoggedIn');
+        navigate('/login');
+      });
   };
 
   const navLinks = [

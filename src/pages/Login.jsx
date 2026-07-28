@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Bot, Mail, Lock, LogIn, Eye, EyeOff, Sparkles, ArrowLeft } from 'lucide-react';
+import { Bot, Mail, Lock, LogIn, Eye, EyeOff, Sparkles, ArrowLeft, AlertCircle } from 'lucide-react';
+import { apiFetch } from '../api';
 
 export default function Login({ setIsLoggedIn }) {
   const [email, setEmail] = useState('vikas@example.com');
-  const [password, setPassword] = useState('password123');
+  const [password, setPassword] = useState('Password@123');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -43,13 +45,23 @@ export default function Login({ setIsLoggedIn }) {
 
     setLoading(true);
     setErrors({});
+    setApiError('');
     
-    setTimeout(() => {
-      setLoading(false);
-      setIsLoggedIn(true);
-      localStorage.setItem('isLoggedIn', 'true');
-      navigate('/dashboard');
-    }, 1200);
+    apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    })
+      .then((data) => {
+        setLoading(false);
+        setIsLoggedIn(true);
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('isLoggedIn', 'true');
+        navigate('/dashboard');
+      })
+      .catch((err) => {
+        setLoading(false);
+        setApiError(err.message || 'An error occurred during sign in');
+      });
   };
 
   const isFormInvalid = !!validateEmail(email) || !!validatePassword(password);
@@ -116,6 +128,13 @@ export default function Login({ setIsLoggedIn }) {
 
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             
+            {apiError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-3.5 rounded-xl text-xs font-semibold flex items-start gap-2.5 animate-fade-in">
+                <AlertCircle className="h-4 w-4 mt-0.5 text-red-500 shrink-0" />
+                <span>{apiError}</span>
+              </div>
+            )}
+
             {/* Email Address */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-405 block">

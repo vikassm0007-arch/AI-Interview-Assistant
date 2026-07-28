@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
@@ -39,6 +39,14 @@ function AppLayout({ children, theme, toggleTheme, isLoggedIn, setIsLoggedIn }) 
   );
 }
 
+// ProtectedRoute checks session state and redirects unauthorized traffic back to login
+function ProtectedRoute({ isLoggedIn }) {
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+}
+
 export default function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
@@ -69,13 +77,18 @@ export default function App() {
           <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/signup" element={<Signup setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/practice" element={<Practice />} />
-          <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
-          <Route path="/question-bank" element={<QuestionBank />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/interview" element={<Interview />} />
-          <Route path="/results" element={<Results />} />
+          
+          {/* Protected Routes Session Context Wrapper */}
+          <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/practice" element={<Practice />} />
+            <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+            <Route path="/question-bank" element={<QuestionBank />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/interview" element={<Interview />} />
+            <Route path="/results" element={<Results />} />
+          </Route>
+
           {/* Fallback path redirects back to homepage */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
