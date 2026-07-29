@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Or "mysql" depending on your preference
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(uuid())
+  email            String             @unique
+  passwordHash     String
+  name             String
+  targetJobTitle   String?            @default("")
+  experienceLevel  String?            @default("mid") // 'entry', 'mid', 'senior', 'lead'
+  credits          Int                @default(8)
+  resumes          Resume[]
+  interviewSessions InterviewSession[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@map("users")
+}
+
+model Resume {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileSize     Int
+  fileUrl      String   // Path in storage (AWS S3, local storage, etc.)
+  extractedText String   @db.Text
+  parsedRole   String
+  skills       String[] // Extracted technologies array
+  experience   String   @default("0 Years")
+  matchScore   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@map("resumes")
+}
+
+model InterviewSession {
+  id           String             @id @default(uuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         String
+  type         String             // 'technical', 'behavioral', etc.
+  difficulty   String             // 'easy', 'medium', 'hard'
+  score        Int                @default(0)
+  technicalAccuracy Int           @default(0)
+  clarityScore      Int           @default(0)
+  starScore         Int           @default(0)
+  responses    QuestionResponse[]
+  createdAt    DateTime           @default(now())
+
+  @@map("interview_sessions")
+}
+
+model QuestionResponse {
+  id               String           @id @default(uuid())
+  sessionId        String
+  session          InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  category         String           // 'Technical', 'Behavioral', 'System Design'
+  questionText     String           @db.Text
+  candidateAnswer  String           @db.Text
+  aiFeedback       String           @db.Text
+  score            Int
+  createdAt        DateTime         @default(now())
+
+  @@map("question_responses")
+}
