@@ -17,7 +17,7 @@ const upload = multer({
     if (isPdf) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF documents are allowed!') as any, false);
+      cb(new Error('Only PDF documents are allowed!'), false);
     }
   }
 });

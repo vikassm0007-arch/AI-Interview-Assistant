@@ -20,9 +20,15 @@ connectDB();
 
 const app = express();
 
-// Secure CORS configuration allowing HttpOnly credentials cookies exchange
+// Secure CORS configuration allowing dynamic localhost ports credentials cookies exchange
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', // Explicit source
+  origin: (origin, callback) => {
+    if (!origin || origin.startsWith('http://localhost:')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS'));
+    }
+  },
   credentials: true, // Required to permit access cookie header passing
   optionsSuccessStatus: 200
 };
