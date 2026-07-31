@@ -13,6 +13,7 @@ import QuestionBank from './pages/QuestionBank';
 import Pricing from './pages/Pricing';
 import Interview from './pages/Interview';
 import Results from './pages/Results';
+import History from './pages/History';
 
 // Layout wrapper to conditionally show/hide Navbar and Footer based on focus states
 function AppLayout({ children, theme, toggleTheme, isLoggedIn, setIsLoggedIn }) {
@@ -87,6 +88,7 @@ export default function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/interview" element={<Interview />} />
             <Route path="/results" element={<Results />} />
+            <Route path="/history" element={<History />} />
           </Route>
 
           {/* Fallback path redirects back to homepage */}

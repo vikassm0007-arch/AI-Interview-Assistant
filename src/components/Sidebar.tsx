@@ -10,7 +10,8 @@ import {
   ChevronLeft, 
   LogOut, 
   Settings, 
-  HelpCircle 
+  HelpCircle,
+  History
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ export default function Sidebar({ isLoggedIn, onLogout }: SidebarProps) {
     { to: '/profile', label: 'User Profile', icon: User },
     { to: '/resume-upload', label: 'Resume Upload', icon: UploadCloud },
     { to: '/practice', label: 'Interview Practice', icon: Play },
+    { to: '/history', label: 'Session History', icon: History },
   ];
 
   const activeStyle = ({ isActive }: { isActive: boolean }) => 
