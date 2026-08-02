@@ -15,7 +15,8 @@ import {
   TrendingUp,
   CheckCircle2,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
+  Code
 } from 'lucide-react';
 
 export default function History() {
@@ -23,6 +24,8 @@ export default function History() {
   const [searchTerm, setSearchTerm] = useState('');
   const [scoreFilter, setScoreFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [modeFilter, setModeFilter] = useState('all'); // 'all', 'HR', 'TECHNICAL'
+  
   const [selectedSession, setSelectedSession] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
 
@@ -53,9 +56,9 @@ export default function History() {
   };
 
   const getScoreColor = (score) => {
-    if (score >= 85) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450';
-    if (score >= 70) return 'bg-amber-500/10 text-amber-600 dark:text-amber-500';
-    return 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
+    if (score >= 85) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-455 border-emerald-500/20';
+    if (score >= 70) return 'bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20';
+    return 'bg-rose-500/10 text-rose-600 dark:text-rose-450 border-rose-500/20';
   };
 
   const filteredSessions = sessions.filter(session => {
@@ -72,8 +75,19 @@ export default function History() {
     if (dateFilter === '7days') matchesDate = (now - sessionTime) <= 7 * 24 * 60 * 60 * 1000;
     else if (dateFilter === '30days') matchesDate = (now - sessionTime) <= 30 * 24 * 60 * 60 * 1000;
 
-    return matchesSearch && matchesScore && matchesDate;
+    let matchesMode = true;
+    // Map missing mode key (from early database seeding) to default 'HR'
+    const sMode = session.interviewMode || 'HR';
+    if (modeFilter !== 'all') {
+      matchesMode = sMode === modeFilter;
+    }
+
+    return matchesSearch && matchesScore && matchesDate && matchesMode;
   });
+
+  const activeQIdx = selectedSession && selectedAnswer 
+    ? selectedSession.questions.findIndex(q => q.questionId === selectedAnswer.questionId)
+    : 0;
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 text-left animate-fade-in">
@@ -85,6 +99,35 @@ export default function History() {
         </p>
       </div>
 
+      {/* Mode Filters tabs switcher */}
+      <div className="flex overflow-x-auto gap-1.5 p-1 border border-slate-200/50 dark:border-slate-800 rounded-2xl bg-white/60 dark:bg-slate-950/20 backdrop-blur-md">
+        <button
+          onClick={() => setModeFilter('all')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            modeFilter === 'all' ? 'bg-indigo-650 bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800/60'
+          }`}
+        >
+          All Practice Sessions
+        </button>
+        <button
+          onClick={() => setModeFilter('HR')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            modeFilter === 'HR' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800/60'
+          }`}
+        >
+          🎤 Behavioral / HR
+        </button>
+        <button
+          onClick={() => setModeFilter('TECHNICAL')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            modeFilter === 'TECHNICAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800/60'
+          }`}
+        >
+          💻 Technical / Skills
+        </button>
+      </div>
+
+      {/* Filters configuration bar */}
       <div className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 p-5 rounded-3xl grid sm:grid-cols-3 gap-4 shadow-sm">
         <div className="relative">
           <Search className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
@@ -125,6 +168,7 @@ export default function History() {
         </div>
       </div>
 
+      {/* History Grid list */}
       {filteredSessions.length === 0 ? (
         <div className="border border-slate-200/60 dark:border-slate-800 p-12 rounded-3xl text-center space-y-3 bg-white dark:bg-slate-900/60 shadow-inner">
           <p className="text-slate-400 text-sm font-semibold">No interview histories match your active filter search parameters.</p>
@@ -135,20 +179,25 @@ export default function History() {
             <div 
               key={session.id}
               onClick={() => { setSelectedSession(session); setSelectedAnswer(session.questions[0] || null); }}
-              className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-3xl hover:shadow-xs hover:border-indigo-600/35 transition-all cursor-pointer flex flex-col justify-between min-h-[160px] text-left"
+              className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-3xl hover:shadow-xs hover:border-indigo-605/35 transition-all cursor-pointer flex flex-col justify-between min-h-[165px] text-left"
             >
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-heading font-extrabold text-slate-900 dark:text-white text-base truncate max-w-[200px] sm:max-w-[250px]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase tracking-wider">
+                        {session.interviewMode || 'HR'}
+                      </span>
+                    </div>
+                    <h4 className="font-heading font-extrabold text-slate-900 dark:text-white text-base truncate max-w-[200px] sm:max-w-[250px] mt-1.5">
                       {session.roleTitle}
                     </h4>
                     <p className="text-[10px] text-slate-405 dark:text-slate-500 font-bold flex items-center gap-1 mt-0.5">
                       <Calendar className="h-3 w-3" /> {new Date(session.date).toLocaleDateString()}
                     </p>
                   </div>
-                  <span className={`text-xs font-extrabold px-2.5 py-1 rounded-lg ${getScoreColor(session.totalScore)}`}>
-                    {session.totalScore}% Match
+                  <span className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border ${getScoreColor(session.totalScore)}`}>
+                    {session.totalScore}% Score
                   </span>
                 </div>
 
@@ -192,6 +241,7 @@ export default function History() {
         </div>
       )}
 
+      {/* Replay Details Modal */}
       {selectedSession && (
         <div className="fixed inset-0 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs z-50 animate-fade-in">
           <div className="bg-white dark:bg-slate-900 max-w-5xl w-full h-[85vh] border border-slate-205 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-left animate-scale-up">
@@ -199,7 +249,7 @@ export default function History() {
             <div className="p-6 border-b border-slate-150 dark:border-slate-850 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/30">
               <div>
                 <span className="text-[9px] font-extrabold uppercase tracking-wider bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 px-2.5 py-1 rounded-md">
-                  Completed Practice Report
+                  {selectedSession.interviewMode || 'HR'} Practice Report
                 </span>
                 <h3 className="font-heading font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white mt-2">
                   {selectedSession.roleTitle}
@@ -214,9 +264,10 @@ export default function History() {
             </div>
 
             <div className="flex-grow flex overflow-hidden flex-col md:flex-row">
+              {/* Left Column: Questions List */}
               <div className="w-full md:w-80 border-r border-slate-150 dark:border-slate-850 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block px-1">Questions List</span>
-                {selectedSession.questions.map((q) => (
+                {selectedSession.questions.map((q, idx) => (
                   <div 
                     key={q.questionId}
                     onClick={() => setSelectedAnswer(q)}
@@ -241,9 +292,25 @@ export default function History() {
                 ))}
               </div>
 
+              {/* Right Column: AI feedback details */}
               {selectedAnswer && (
                 <div className="flex-grow overflow-y-auto p-6 space-y-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-850 pb-5">
+                  
+                  {/* Mode-Specific HR Headers */}
+                  {selectedSession.interviewMode !== 'TECHNICAL' && selectedSession.hrMetadata && (
+                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-2.5xl border border-slate-200/50 dark:border-slate-850 text-xs font-bold leading-relaxed">
+                      <div>
+                        <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Communication Tone</p>
+                        <p className="text-slate-800 dark:text-white mt-1">{selectedSession.hrMetadata.communicationTone || 'Professional'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Culture Fit Match</p>
+                        <p className="text-slate-805 dark:text-white mt-1">{selectedSession.hrMetadata.cultureFitRating || 82}% Match</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-105 dark:border-slate-850 pb-5">
                     <div>
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Selected Question</span>
                       <h4 className="font-heading font-extrabold text-sm sm:text-base text-slate-850 dark:text-white mt-1 leading-relaxed">
@@ -257,6 +324,18 @@ export default function History() {
                     </div>
                   </div>
 
+                  {/* Mode-Specific Code Submissions preview terminals */}
+                  {selectedSession.interviewMode === 'TECHNICAL' && selectedSession.technicalMetadata?.codeSubmissions?.[activeQIdx] && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5">
+                        <Code className="h-4 w-4" /> Submitted Code Solution
+                      </span>
+                      <pre className="p-4 bg-slate-950 text-emerald-450 border border-slate-850 rounded-2.5xl text-xs font-mono leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
+                        {selectedSession.technicalMetadata.codeSubmissions[activeQIdx]}
+                      </pre>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Your Answer Transcript</span>
                     <div className="p-4 bg-slate-50 dark:bg-slate-950/45 border border-slate-200/50 dark:border-slate-850 rounded-2.5xl text-xs sm:text-sm text-slate-800 dark:text-slate-205 leading-relaxed">
@@ -266,7 +345,7 @@ export default function History() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-3 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/15 p-4 rounded-2.5xl">
-                      <h5 className="font-heading font-extrabold text-xs text-emerald-600 dark:text-emerald-450 flex items-center gap-1.5">
+                      <h5 className="font-heading font-extrabold text-xs text-emerald-600 dark:text-emerald-455 flex items-center gap-1.5">
                         <CheckCircle2 className="h-4.5 w-4.5" /> Strengths Detected
                       </h5>
                       <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 font-semibold list-disc pl-4 leading-relaxed">
@@ -277,7 +356,7 @@ export default function History() {
                     </div>
 
                     <div className="space-y-3 bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/15 p-4 rounded-2.5xl">
-                      <h5 className="font-heading font-extrabold text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1.5">
+                      <h5 className="font-heading font-extrabold text-xs text-amber-605 dark:text-amber-500 flex items-center gap-1.5">
                         <AlertTriangle className="h-4.5 w-4.5" /> Points to Improve
                       </h5>
                       <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 font-semibold list-disc pl-4 leading-relaxed">
@@ -289,10 +368,10 @@ export default function History() {
                   </div>
 
                   <div className="space-y-2 bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/15 p-4 rounded-2.5xl">
-                    <h5 className="font-heading font-extrabold text-xs text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5">
+                    <h5 className="font-heading font-extrabold text-xs text-indigo-655 dark:text-indigo-400 flex items-center gap-1.5">
                       <TrendingUp className="h-4.5 w-4.5" /> Ideal Response Blueprint
                     </h5>
-                    <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-semibold">
+                    <p className="text-xs text-slate-650 dark:text-slate-450 leading-relaxed font-semibold">
                       {selectedAnswer.aiFeedback.idealAnswer}
                     </p>
                   </div>

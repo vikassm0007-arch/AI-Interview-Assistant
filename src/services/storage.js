@@ -3,19 +3,26 @@ const HISTORY_STORAGE_KEY = 'intervue_history';
 
 // Seed mock history session data for demonstration
 const mockSessions = [
+  // 1. HR Behavioral Session
   {
     id: 'session-seed-1',
-    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1005).toISOString(), // 2 days ago
-    roleTitle: 'Frontend Developer',
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    roleTitle: 'Frontend Developer (Startup)',
     experienceLevel: 'Mid',
     totalScore: 84,
     durationSeconds: 780, // 13 mins
     questionsCount: 3,
     status: 'completed',
+    interviewMode: 'HR',
+    hrMetadata: {
+      starCompletenessScore: 88,
+      communicationTone: 'Confident & Collaborative',
+      cultureFitRating: 85
+    },
     questions: [
       {
         questionId: 'q-1',
-        category: 'Technical',
+        category: 'Behavioral',
         questionText: 'Can you describe a time when you had to optimize the performance of a React web application?',
         candidateAnswer: 'Yeah, absolutely. So we had a large list rendering in a dashboard that was really slow. I profile it using React DevTools and noticed that every keypress was triggering rerenders on all list elements. I resolved it by virtualization using react-window, memoizing list item components, and lazy loading the off-screen items.',
         timeSpentSeconds: 240,
@@ -33,7 +40,7 @@ const mockSessions = [
       },
       {
         questionId: 'q-2',
-        category: 'Technical',
+        category: 'Behavioral',
         questionText: 'What is the difference between useMemo and useCallback? When would you use one over the other?',
         candidateAnswer: 'useMemo returns a memoized value, while useCallback returns a memoized function callback. You use useCallback to prevent functions from being recreated on every render, which is helpful when passing functions down to memoized children to avoid breaks in shallow comparisons.',
         timeSpentSeconds: 180,
@@ -65,6 +72,46 @@ const mockSessions = [
             "Try to follow the STAR structure more explicitly. Elaborate on the business impact of checkout delays."
           ],
           idealAnswer: "Structure using STAR: Situation (Checkout gateway was down, risking 15% drop-off), Task (Bypass blocker to unfreeze QA timelines), Action (Designed mock adapter middleware, aligned with QA leads, ran tests), Result (Checkout code shipped 2 days early, payment bugs caught pre-release)."
+        }
+      }
+    ]
+  },
+  // 2. Technical Session
+  {
+    id: 'session-seed-2',
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+    roleTitle: 'React, System Design - Senior',
+    experienceLevel: 'Senior',
+    totalScore: 91,
+    durationSeconds: 1140, // 19 mins
+    questionsCount: 1,
+    status: 'completed',
+    interviewMode: 'TECHNICAL',
+    technicalMetadata: {
+      selectedSkills: ["React", "System Design"],
+      difficulty: "Senior",
+      codeSubmissions: [
+        "// React Senior Undo Hook challenge\nimport { useState, useCallback } from 'react';\n\nexport function useHistoryState(initialValue) {\n  const [state, setState] = useState(initialValue);\n  const [history, setHistory] = useState([initialValue]);\n  const [pointer, setPointer] = useState(0);\n\n  const set = useCallback((next) => {\n    const val = typeof next === 'function' ? next(state) : next;\n    const nextHistory = history.slice(0, pointer + 1);\n    setHistory([...nextHistory, val]);\n    setPointer(nextHistory.length);\n    setState(val);\n  }, [history, pointer, state]);\n\n  const undo = useCallback(() => {\n    if (pointer > 0) {\n      setPointer(pointer - 1);\n      setState(history[pointer - 1]);\n    }\n  }, [history, pointer]);\n\n  const redo = useCallback(() => {\n    if (pointer < history.length - 1) {\n      setPointer(pointer + 1);\n      setState(history[pointer + 1]);\n    }\n  }, [history, pointer]);\n\n  return [state, { set, undo, redo }];\n}"
+      ],
+      testCasesPassed: 1
+    },
+    questions: [
+      {
+        questionId: 'q-tech-1',
+        category: 'Technical',
+        questionText: 'Design a custom state controller hook supporting undo/redo action histories.',
+        candidateAnswer: 'I implemented this useHistoryState custom hook in React. It stores the state value list in a history array and tracks the pointer index. When the user sets a new state, we discard any redo states beyond the cursor and append the new state. Undo and redo move the cursor.',
+        timeSpentSeconds: 1140,
+        aiFeedback: {
+          score: 91,
+          strengths: [
+            "Excellent design of custom hook dependencies.",
+            "Handled redo history slicing correctly to avoid memory leaks."
+          ],
+          improvements: [
+            "Consider adding boundaries limits on the history array size to avoid high memory spikes."
+          ],
+          idealAnswer: "The ideal answer designs a custom hook returning state and controllers. When setting values, slice the history up to the cursor and append: `history.slice(0, index + 1)`. Use `useCallback` to maintain referential identity of undo, redo, and set functions."
         }
       }
     ]
