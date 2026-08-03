@@ -11,7 +11,8 @@ import {
   LogOut, 
   Settings, 
   HelpCircle,
-  History
+  History,
+  TrendingUp
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +27,7 @@ export default function Sidebar({ isLoggedIn, onLogout }: SidebarProps) {
 
   const menuItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/analytics', label: 'Analytics & Progress', icon: TrendingUp },
     { to: '/profile', label: 'User Profile', icon: User },
     { to: '/resume-upload', label: 'Resume Upload', icon: UploadCloud },
     { to: '/practice', label: 'Interview Practice', icon: Play },
