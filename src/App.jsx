@@ -15,6 +15,8 @@ import Interview from './pages/Interview';
 import Results from './pages/Results';
 import History from './pages/History';
 import Analytics from './pages/Analytics';
+import ProfilePage from './pages/ProfilePage';
+import { ToastProvider } from './components/ui/Toast';
 
 // Layout wrapper to conditionally show/hide Navbar and Footer based on focus states
 function AppLayout({ children, theme, toggleTheme, isLoggedIn, setIsLoggedIn }) {
@@ -72,32 +74,35 @@ export default function App() {
   };
 
   return (
-    <Router>
-      <AppLayout theme={theme} toggleTheme={toggleTheme} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
-          <Route path="/signup" element={<Signup setIsLoggedIn={setIsLoggedIn} />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          
-          {/* Protected Routes Session Context Wrapper */}
-          <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/practice" element={<Practice />} />
-            <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
-            <Route path="/question-bank" element={<QuestionBank />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/interview" element={<Interview />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/analytics" element={<Analytics />} />
-          </Route>
+    <ToastProvider>
+      <Router>
+        <AppLayout theme={theme} toggleTheme={toggleTheme} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+            <Route path="/signup" element={<Signup setIsLoggedIn={setIsLoggedIn} />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Protected Routes Session Context Wrapper */}
+            <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/practice" element={<Practice />} />
+              <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+              <Route path="/question-bank" element={<QuestionBank />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/interview" element={<Interview />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/analytics" element={<Analytics />} />
+            </Route>
 
-          {/* Fallback path redirects back to homepage */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AppLayout>
-    </Router>
+            {/* Fallback path redirects back to homepage */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AppLayout>
+      </Router>
+    </ToastProvider>
   );
 }
 
