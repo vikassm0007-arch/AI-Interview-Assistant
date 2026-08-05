@@ -78,6 +78,26 @@ export default function InterviewEngine() {
     return () => clearInterval(interval);
   }, [isPaused, isSaving]);
 
+  // Active Session Browser Reload Guard (beforeunload)
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!isSaving && answers.length < questionsList.length) {
+        e.preventDefault();
+        e.returnValue = 'Interview session is currently active. Leaving will discard unsaved progress.';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isSaving, answers.length, questionsList.length]);
+
+  // Unmount memory leak cleanup for voice intervals & timers
+  useEffect(() => {
+    return () => {
+      if (window.voiceInterval) clearInterval(window.voiceInterval);
+    };
+  }, []);
+
   // Simulated Mic volume level waveform animation in voice mode
   useEffect(() => {
     if (!isRecording || isPaused) return;
@@ -336,10 +356,11 @@ export default function InterviewEngine() {
           <div className="flex justify-end pt-4 border-t border-slate-200/50 dark:border-slate-850">
             <button
               type="button"
+              disabled={isSaving}
               onClick={handleNextSubmit}
-              className="bg-indigo-600 hover:bg-indigo-705 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-605/10 hover:scale-[1.01] active:scale-99 transition-all text-xs sm:text-sm uppercase tracking-wider font-heading flex items-center gap-1.5 cursor-pointer"
+              className="bg-indigo-600 hover:bg-indigo-705 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-605/10 hover:scale-[1.01] active:scale-99 transition-all text-xs sm:text-sm uppercase tracking-wider font-heading flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {currentIdx < questionsList.length - 1 ? 'Submit & Next' : 'End & Evaluate'}
+              {isSaving ? 'Processing...' : currentIdx < questionsList.length - 1 ? 'Submit & Next' : 'End & Evaluate'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
