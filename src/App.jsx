@@ -19,6 +19,7 @@ import ProfilePage from './pages/ProfilePage';
 import ErrorBoundary from './components/boundaries/ErrorBoundary';
 import { ToastProvider } from './context/ToastContext';
 import ToastContainer from './components/ui/ToastContainer';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Layout wrapper to conditionally show/hide Navbar and Footer based on focus states
 function AppLayout({ children, theme, toggleTheme, isLoggedIn, setIsLoggedIn }) {
@@ -43,14 +44,6 @@ function AppLayout({ children, theme, toggleTheme, isLoggedIn, setIsLoggedIn }) 
       {!isFullPage && <Footer />}
     </div>
   );
-}
-
-// ProtectedRoute checks session state and redirects unauthorized traffic back to login
-function ProtectedRoute({ isLoggedIn }) {
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-  return <Outlet />;
 }
 
 export default function App() {
