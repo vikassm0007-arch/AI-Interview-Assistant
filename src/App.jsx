@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Landing from './pages/Landing';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -19,40 +16,23 @@ import ProfilePage from './pages/ProfilePage';
 import ErrorBoundary from './components/boundaries/ErrorBoundary';
 import { ToastProvider } from './context/ToastContext';
 import ToastContainer from './components/ui/ToastContainer';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/routes/ProtectedRoute';
+import AppLayout from './components/layout/AppLayout';
 
-// Layout wrapper to conditionally show/hide Navbar and Footer based on focus states
-function AppLayout({ children, theme, toggleTheme, isLoggedIn, setIsLoggedIn }) {
-  const location = useLocation();
-  
-  // Hide Navbar/Footer on Login, Signup, ForgotPassword, and Active Interview screens
-  const isFullPage = ['/login', '/signup', '/forgot-password', '/interview'].includes(location.pathname);
-
-  return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {!isFullPage && (
-        <Navbar 
-          theme={theme} 
-          toggleTheme={toggleTheme} 
-          isLoggedIn={isLoggedIn} 
-          setIsLoggedIn={setIsLoggedIn} 
-        />
-      )}
-      <main className="flex-grow flex flex-col">
-        {children}
-      </main>
-      {!isFullPage && <Footer />}
-    </div>
-  );
+/**
+ * RootRedirect Component
+ * Default '/' entry point.
+ * Redirects to /dashboard if candidate is logged in, or /login if unauthenticated.
+ */
+function RootRedirect() {
+  const { isAuthenticated } = useAuth();
+  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
 }
 
 export default function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
-  });
-
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('isLoggedIn') === 'true';
   });
 
   useEffect(() => {
@@ -70,37 +50,44 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <ToastContainer />
-        <Router>
-          <AppLayout theme={theme} toggleTheme={toggleTheme} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
-              <Route path="/signup" element={<Signup setIsLoggedIn={setIsLoggedIn} />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              
-              {/* Protected Routes Session Context Wrapper */}
-              <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/practice" element={<Practice />} />
-                <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
-                <Route path="/question-bank" element={<QuestionBank />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/interview" element={<Interview />} />
-                <Route path="/results" element={<Results />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/analytics" element={<Analytics />} />
-              </Route>
+      <AuthProvider>
+        <ToastProvider>
+          <ToastContainer />
+          <Router>
+            <AppLayout theme={theme} toggleTheme={toggleTheme}>
+              <Routes>
+                {/* Default Entry Point: Login-First Guard */}
+                <Route path="/" element={<RootRedirect />} />
 
-              {/* Fallback path redirects back to homepage */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </AppLayout>
-        </Router>
-      </ToastProvider>
+                {/* Public Auth Routes (Clean layout, no Navbar) */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+
+                {/* Protected Candidate Routes (Authenticated Shell with Navbar) */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/practice" element={<Practice />} />
+                  <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+                  <Route path="/resume-upload" element={<ResumeAnalyzer />} />
+                  <Route path="/question-bank" element={<QuestionBank />} />
+                  <Route path="/coding-practice" element={<QuestionBank />} />
+                  <Route path="/aptitude" element={<QuestionBank />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/interview" element={<Interview />} />
+                  <Route path="/results" element={<Results />} />
+                  <Route path="/history" element={<History />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                </Route>
+
+                {/* Fallback path redirects to root guard */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AppLayout>
+          </Router>
+        </ToastProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
-

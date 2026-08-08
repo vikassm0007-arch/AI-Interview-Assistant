@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Bot, Menu, X, LayoutDashboard, UploadCloud, GraduationCap, DollarSign, Play, Briefcase, Sun, Moon, User, Settings, LogOut, ChevronDown, Sparkles } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api';
 
-export default function Navbar({ theme, toggleTheme, isLoggedIn, setIsLoggedIn }) {
+export default function Navbar({ theme, toggleTheme }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function Navbar({ theme, toggleTheme, isLoggedIn, setIsLoggedIn }
 
   const handleCTAClick = () => {
     setIsOpen(false);
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       navigate('/practice');
     } else {
       navigate('/login');
@@ -31,13 +33,8 @@ export default function Navbar({ theme, toggleTheme, isLoggedIn, setIsLoggedIn }
 
   const handleSignOut = () => {
     setShowProfile(false);
-    apiFetch('/auth/logout', { method: 'POST' })
-      .finally(() => {
-        setIsLoggedIn(false);
-        localStorage.removeItem('token');
-        localStorage.removeItem('isLoggedIn');
-        navigate('/login');
-      });
+    logout();
+    navigate('/login');
   };
 
   const navLinks = [

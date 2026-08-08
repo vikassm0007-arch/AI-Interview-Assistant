@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Bot, Mail, Lock, LogIn, Eye, EyeOff, Sparkles, ArrowLeft, AlertCircle } from 'lucide-react';
-import { apiFetch } from '../api';
+import { useAuth } from '../context/AuthContext';
 
-export default function Login({ setIsLoggedIn }) {
+export default function Login() {
   const [email, setEmail] = useState('vikas@example.com');
   const [password, setPassword] = useState('Password@123');
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +11,10 @@ export default function Login({ setIsLoggedIn }) {
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { login } = useAuth();
+
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
 
   const validateEmail = (val) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,7 +36,7 @@ export default function Login({ setIsLoggedIn }) {
     setErrors(prev => ({ ...prev, [field]: err }));
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     
     const emailErr = validateEmail(email);
@@ -47,21 +51,14 @@ export default function Login({ setIsLoggedIn }) {
     setErrors({});
     setApiError('');
     
-    apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    })
-      .then((data) => {
-        setLoading(false);
-        setIsLoggedIn(true);
-        localStorage.setItem('token', data.accessToken);
-        localStorage.setItem('isLoggedIn', 'true');
-        navigate('/dashboard');
-      })
-      .catch((err) => {
-        setLoading(false);
-        setApiError(err.message || 'An error occurred during sign in');
-      });
+    const res = await login({ email, password });
+    setLoading(false);
+
+    if (res.success) {
+      navigate(redirectTo, { replace: true });
+    } else {
+      setApiError(res.error || 'An error occurred during sign in');
+    }
   };
 
   const isFormInvalid = !!validateEmail(email) || !!validatePassword(password);
