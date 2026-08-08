@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Bot, Mail, Lock, User, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api';
 
-export default function Signup({ setIsLoggedIn }) {
+export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,6 +15,7 @@ export default function Signup({ setIsLoggedIn }) {
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, updateUser } = useAuth();
 
   // Password strength checker helper
   const getPasswordStrength = (val) => {
@@ -72,7 +74,7 @@ export default function Signup({ setIsLoggedIn }) {
     setErrors(prev => ({ ...prev, [field]: err }));
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
 
     const nameErr = validateName(name);
@@ -89,21 +91,10 @@ export default function Signup({ setIsLoggedIn }) {
     setErrors({});
     setApiError('');
 
-    apiFetch('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password })
-    })
-      .then((data) => {
-        setLoading(false);
-        setIsLoggedIn(true);
-        localStorage.setItem('token', data.accessToken);
-        localStorage.setItem('isLoggedIn', 'true');
-        navigate('/dashboard');
-      })
-      .catch((err) => {
-        setLoading(false);
-        setApiError(err.message || 'An error occurred during registration');
-      });
+    await login({ email, password });
+    updateUser({ name, email });
+    setLoading(false);
+    navigate('/dashboard');
   };
 
   const isFormInvalid = 
