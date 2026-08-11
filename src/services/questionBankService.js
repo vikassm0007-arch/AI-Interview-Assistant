@@ -81,7 +81,7 @@ export const INITIAL_QUESTIONS = [
     constraints: ['Space complexity must be O(1).', 'Time complexity O(N).'],
     practiced: true,
     bookmarked: false,
-    codeTemplate: `function twoSum(numbers, target) {\n  let left = 0, right = numbers.length - 1;\n  // TODO: Implement 2-pointer scan\n}`
+    codeTemplate: `function twoSum(numbers, target) {\n  let left = 0, right = numbers.length - 1;\n  while (left < right) {\n    const sum = numbers[left] + numbers[right];\n    if (sum === target) return [left + 1, right + 1];\n    if (sum < target) left++; else right--;\n  }\n  return [];\n}`
   },
   {
     id: 'q-algo-2',
@@ -94,6 +94,30 @@ export const INITIAL_QUESTIONS = [
     practiced: false,
     bookmarked: true,
     codeTemplate: `function longestPalindrome(s) {\n  // Expand around center approach\n}`
+  },
+  {
+    id: 'q-algo-3',
+    category: 'Algorithms',
+    title: 'Container With Most Water',
+    difficulty: 'Medium',
+    estimatedTime: '15 mins',
+    description: 'Given an array of line heights, find two lines that together with the x-axis form a container holding the maximum amount of water.',
+    constraints: ['2 <= height.length <= 10^5', 'O(N) time complexity target using two pointers.'],
+    practiced: false,
+    bookmarked: false,
+    codeTemplate: `function maxArea(height) {\n  let left = 0, right = height.length - 1, maxWater = 0;\n  // TODO: Two pointer scan\n}`
+  },
+  {
+    id: 'q-algo-4',
+    category: 'Algorithms',
+    title: 'Coin Change (Minimum Coins DP)',
+    difficulty: 'Medium',
+    estimatedTime: '20 mins',
+    description: 'Find the minimum number of coins needed to make up a given amount using specified coin denominations.',
+    constraints: ['Dynamic programming O(N * Amount) time.', 'Auxiliary space O(Amount).'],
+    practiced: true,
+    bookmarked: true,
+    codeTemplate: `function coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  // TODO: Fill DP array\n}`
   },
 
   // 4. Behavioral Category

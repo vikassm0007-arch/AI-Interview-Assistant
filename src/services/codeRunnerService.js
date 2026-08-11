@@ -147,6 +147,63 @@ export const SAMPLE_CODING_CHALLENGES = [
     hiddenTestCases: [
       { id: 'h1', input: 's = "0P"', expectedOutput: 'false' }
     ]
+  },
+  {
+    id: 'container-with-most-water',
+    title: '3. Container With Most Water',
+    difficulty: 'Medium',
+    topicTags: ['Two Pointers', 'Greedy', 'Arrays'],
+    timeLimit: '2.0s',
+    memoryLimit: '256 MB',
+    description: `You are given an integer array \`height\` of length \`n\`. There are \`n\` vertical lines drawn such that the two endpoints of the \`i-th\` line are \`(i, 0)\` and \`(i, height[i])\`.\n\nFind two lines that together with the x-axis form a container, such that the container contains the most water.\n\nReturn the maximum amount of water a container can store.`,
+    constraints: [
+      'n == height.length',
+      '2 <= n <= 10^5',
+      '0 <= height[i] <= 10^4'
+    ],
+    hints: [
+      { tier: 1, title: 'Hint 1: Two Pointer Scan', text: 'Start with maximum width (pointers at start and end).' },
+      { tier: 2, title: 'Hint 2: Greedy Choice', text: 'Move the pointer pointing to the shorter line inward, as moving the taller line can never yield a larger area.' },
+      { tier: 3, title: 'Hint 3: Optimal Complexity Target', text: 'Target Time Complexity: O(N), Target Auxiliary Space Complexity: O(1).' }
+    ],
+    sampleTestCases: [
+      { id: 't1', input: 'height = [1,8,6,2,5,4,8,3,7]', expectedOutput: '49' },
+      { id: 't2', input: 'height = [1,1]', expectedOutput: '1' }
+    ],
+    hiddenTestCases: [
+      { id: 'h1', input: 'height = [4,3,2,1,4]', expectedOutput: '16' }
+    ],
+    optimalSolutions: {
+      javascript: `function maxArea(height) {\n  let left = 0, right = height.length - 1, maxWater = 0;\n  while (left < right) {\n    const area = Math.min(height[left], height[right]) * (right - left);\n    maxWater = Math.max(maxWater, area);\n    if (height[left] < height[right]) left++; else right--;\n  }\n  return maxWater;\n}`,
+      python: `class Solution:\n    def maxArea(self, height: list[int]) -> int:\n        left, right, max_water = 0, len(height) - 1, 0\n        while left < right:\n            area = min(height[left], height[right]) * (right - left)\n            max_water = max(max_water, area)\n            if height[left] < height[right]:\n                left += 1\n            else:\n                right -= 1\n        return max_water`
+    }
+  },
+  {
+    id: 'coin-change',
+    title: '4. Coin Change (Min Coins)',
+    difficulty: 'Medium',
+    topicTags: ['Dynamic Programming', 'BFS'],
+    timeLimit: '2.0s',
+    memoryLimit: '256 MB',
+    description: `You are given an integer array \`coins\` representing coins of different denominations and an integer \`amount\` representing a total amount of money.\n\nReturn the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return \`-1\`.`,
+    constraints: [
+      '1 <= coins.length <= 12',
+      '1 <= coins[i] <= 2^31 - 1',
+      '0 <= amount <= 10^4'
+    ],
+    hints: [
+      { tier: 1, title: 'Hint 1: Subproblem Overlap', text: 'Let dp[i] be the minimum coins required for amount i.' },
+      { tier: 2, title: 'Hint 2: Recurrence Relation', text: 'dp[i] = min(dp[i - coin] + 1) for all coins <= i.' },
+      { tier: 3, title: 'Hint 3: Optimal Complexity Target', text: 'Target Time Complexity: O(N * amount), Space: O(amount).' }
+    ],
+    sampleTestCases: [
+      { id: 't1', input: 'coins = [1,2,5], amount = 11', expectedOutput: '3' },
+      { id: 't2', input: 'coins = [2], amount = 3', expectedOutput: '-1' },
+      { id: 't3', input: 'coins = [1], amount = 0', expectedOutput: '0' }
+    ],
+    hiddenTestCases: [
+      { id: 'h1', input: 'coins = [186,419,83,408], amount = 6249', expectedOutput: '20' }
+    ]
   }
 ];
 
