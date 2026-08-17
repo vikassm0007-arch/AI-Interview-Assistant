@@ -30,7 +30,7 @@ describe('Security & Input Sanitization Tests', () => {
 
   describe('Zod Schema Validation', () => {
     it('validates correct login credentials payload', () => {
-      const valid = { email: 'vikas@example.com', password: 'Password@123' };
+      const valid = { email: 'candidate@example.com', password: 'Password@123' };
       const res = validatePayload(loginSchema, valid);
       expect(res.success).toBe(true);
     });

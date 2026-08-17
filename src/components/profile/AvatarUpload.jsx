@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, UploadCloud, RefreshCw, X, Check, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '../ui/Toast';
 
-export default function AvatarUpload({ currentAvatar, userName = 'Vikas S.', onAvatarChange }) {
+export default function AvatarUpload({ currentAvatar, userName = 'Candidate User', onAvatarChange }) {
   const [avatarUrl, setAvatarUrl] = useState(currentAvatar || null);
   const [previousAvatar, setPreviousAvatar] = useState(currentAvatar || null);
   const [isUploading, setIsUploading] = useState(false);
@@ -13,7 +13,7 @@ export default function AvatarUpload({ currentAvatar, userName = 'Vikas S.', onA
   const { addToast } = useToast();
 
   const getInitials = (name) => {
-    if (!name) return 'VS';
+    if (!name) return 'CU';
     return name
       .split(' ')
       .map(n => n[0])

@@ -4,8 +4,8 @@ import { Bot, Mail, Lock, LogIn, Eye, EyeOff, Sparkles, ArrowLeft, AlertCircle }
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('vikas@example.com');
-  const [password, setPassword] = useState('Password@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');

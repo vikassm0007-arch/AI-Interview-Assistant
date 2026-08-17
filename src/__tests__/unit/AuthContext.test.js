@@ -23,13 +23,13 @@ describe('AuthContext Persistence & Session Tests', () => {
   });
 
   it('persists candidate user details upon authentication', () => {
-    const mockUser = { name: 'Vikas S.', email: 'vikas@example.com', targetRole: 'Senior Engineer' };
+    const mockUser = { name: 'Candidate User', email: 'user@example.com', targetRole: 'Senior Engineer' };
     mockStorage.setItem('user', JSON.stringify(mockUser));
     mockStorage.setItem('token', 'mock-jwt-token-2026');
     mockStorage.setItem('isLoggedIn', 'true');
 
     const savedUser = JSON.parse(mockStorage.getItem('user'));
-    expect(savedUser.email).toBe('vikas@example.com');
+    expect(savedUser.email).toBe('user@example.com');
     expect(mockStorage.getItem('isLoggedIn')).toBe('true');
   });
 

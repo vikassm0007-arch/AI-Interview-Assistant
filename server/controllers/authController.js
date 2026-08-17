@@ -12,8 +12,8 @@ const REFRESH_COOKIE_NAME = 'jid';
 const mockUsers = [
   {
     _id: 'mock-user-123',
-    name: 'Vikas S.',
-    email: 'vikas@example.com',
+    name: 'Candidate User',
+    email: 'user@example.com',
     password: '', // Initialized at startup
     credits: 8,
     targetJobTitle: 'Frontend Developer',

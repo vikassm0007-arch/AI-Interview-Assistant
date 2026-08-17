@@ -41,8 +41,8 @@ const parseLocally = (text: string): ParsedResume => {
   const normalized = text.toLowerCase();
   
   // 1. Guess candidate name (usually at the very beginning of the document)
-  // Take the first 3 non-empty words or default to Vikas S.
-  let candidateName = 'Vikas S.';
+  // Take the first 3 non-empty words or default to Candidate User.
+  let candidateName = 'Candidate User';
   const words = text.split(/\s+/).filter(w => w.length > 2 && !/email|phone|resume|curriculum/i.test(w));
   if (words.length >= 2) {
     candidateName = `${words[0]} ${words[1]}`;

@@ -12,7 +12,7 @@ const sanitizeText = (text) => {
 
 const parseLocally = (text) => {
   const normalized = text.toLowerCase();
-  let candidateName = 'Vikas S.';
+  let candidateName = 'Candidate User';
   const words = text.split(/\s+/).filter(w => w.length > 2 && !/email|phone|resume|curriculum/i.test(w));
   if (words.length >= 2) {
     candidateName = `${words[0]} ${words[1]}`;

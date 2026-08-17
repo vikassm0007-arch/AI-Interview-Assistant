@@ -134,7 +134,7 @@ export default function Footer() {
               </a>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
-              Made with <Heart className="h-3.5 w-3.5 text-rose-500 fill-current" /> for Vikas
+              Made with <Heart className="h-3.5 w-3.5 text-rose-500 fill-current" /> for Candidates
             </div>
           </div>
         </div>

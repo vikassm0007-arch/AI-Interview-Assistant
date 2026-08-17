@@ -59,8 +59,8 @@ export const mockHandlers = {
       data: {
         success: true,
         profile: {
-          name: body.name || 'Vikas S.',
-          email: body.email || 'vikas@example.com',
+          name: body.name || 'Candidate User',
+          email: body.email || 'user@example.com',
           targetJobTitle: body.targetJobTitle || 'Senior Full-Stack Engineer',
           updatedAt: new Date().toISOString()
         }

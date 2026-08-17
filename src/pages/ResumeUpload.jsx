@@ -30,7 +30,7 @@ export default function ResumeUpload() {
   }, [role]);
 
   const handleFileUpload = (e) => {
-    const uploadedFile = e.target.files?.[0] || { name: 'resume_vikas_s.pdf', size: 245000 };
+    const uploadedFile = e.target.files?.[0] || { name: 'sample_resume.pdf', size: 245000 };
     setFile(uploadedFile);
     setUploading(true);
     setProgress(0);

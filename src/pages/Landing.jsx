@@ -166,7 +166,7 @@ export default function Landing() {
               "The speech feedback is incredible. It caught that I kept starting sentences with 'So yeah' and urged me to describe my list virtualization project more cleanly. Got the offer last week!"
             </p>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">Vikas S.</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Alex M.</p>
               <p className="text-[10px] text-slate-400">Frontend Web Developer</p>
             </div>
           </div>

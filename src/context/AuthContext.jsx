@@ -8,13 +8,13 @@ export function AuthProvider({ children }) {
     try {
       const savedUser = localStorage.getItem('user');
       return savedUser ? JSON.parse(savedUser) : {
-        name: 'Vikas S.',
-        email: 'vikas@example.com',
+        name: 'Candidate User',
+        email: 'user@example.com',
         targetRole: 'Senior Full-Stack Engineer',
         avatar: null
       };
     } catch {
-      return { name: 'Vikas S.', email: 'vikas@example.com', targetRole: 'Senior Full-Stack Engineer', avatar: null };
+      return { name: 'Candidate User', email: 'user@example.com', targetRole: 'Senior Full-Stack Engineer', avatar: null };
     }
   });
 
@@ -43,10 +43,12 @@ export function AuthProvider({ children }) {
       });
 
       const authToken = data.accessToken || 'mock-jwt-token-2026';
+      const userEmail = credentials.email || 'user@example.com';
+      const derivedName = userEmail.split('@')[0] ? (userEmail.split('@')[0].charAt(0).toUpperCase() + userEmail.split('@')[0].slice(1)) : 'Candidate User';
       const userData = data.user || {
-        name: credentials.email.split('@')[0] || 'Vikas S.',
-        email: credentials.email,
-        targetRole: 'Senior Full-Stack Engineer'
+        name: data.name || derivedName,
+        email: userEmail,
+        targetRole: data.targetJobTitle || 'Senior Full-Stack Engineer'
       };
 
       setToken(authToken);
@@ -59,9 +61,11 @@ export function AuthProvider({ children }) {
       setLoading(false);
       // Fallback for offline demo mode
       const mockToken = 'mock-jwt-token-2026';
+      const userEmail = credentials.email || 'user@example.com';
+      const derivedName = userEmail.split('@')[0] ? (userEmail.split('@')[0].charAt(0).toUpperCase() + userEmail.split('@')[0].slice(1)) : 'Candidate User';
       const mockUser = {
-        name: 'Vikas S.',
-        email: credentials.email || 'vikas@example.com',
+        name: derivedName,
+        email: userEmail,
         targetRole: 'Senior Full-Stack Engineer'
       };
       setToken(mockToken);

@@ -118,10 +118,10 @@ export default function Navbar({ theme, toggleTheme }) {
                     className="flex items-center gap-2.5 p-1 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-pointer"
                   >
                     <div className="h-8 w-8 rounded-lg bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-heading font-extrabold text-sm border border-indigo-500/10">
-                      {user?.name ? user.name.split(' ').map(n=>n[0]).join('').toUpperCase() : 'VS'}
+                      {user?.name ? user.name.split(' ').map(n=>n[0]).join('').toUpperCase() : 'CU'}
                     </div>
                     <div className="text-left hidden xl:block">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{user?.name || 'Vikas S.'}</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{user?.name || 'Candidate User'}</p>
                     </div>
                     <ChevronDown className={`h-3.5 w-3.5 text-slate-500 transition-transform ${showProfile ? 'rotate-180' : ''}`} />
                   </button>
@@ -131,8 +131,8 @@ export default function Navbar({ theme, toggleTheme }) {
                     <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-2 z-50 text-left animate-fade-in">
                       <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
                         <p className="text-xs text-slate-400 dark:text-slate-500">Signed in as</p>
-                        <p className="text-sm font-bold text-slate-850 dark:text-slate-200 truncate">{user?.name || 'Vikas S.'}</p>
-                        <p className="text-xs text-slate-505 dark:text-slate-400 truncate">{user?.email || 'vikas@example.com'}</p>
+                        <p className="text-sm font-bold text-slate-850 dark:text-slate-200 truncate">{user?.name || 'Candidate User'}</p>
+                        <p className="text-xs text-slate-505 dark:text-slate-400 truncate">{user?.email || 'user@example.com'}</p>
                       </div>
                       <div className="p-1">
                         <button

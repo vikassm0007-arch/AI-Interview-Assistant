@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, FileText, TrendingUp, Plus, ArrowRight, ShieldAlert, Award, Play } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [quickRole, setQuickRole] = useState('frontend');
   const [quickType, setQuickType] = useState('technical');
   const [quickDifficulty, setQuickDifficulty] = useState('medium');
@@ -21,6 +23,8 @@ export default function Dashboard() {
     navigate('/results');
   };
 
+  const candidateFirstName = user?.name ? user.name.split(' ')[0] : 'Candidate';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8 flex-grow bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       
@@ -34,7 +38,7 @@ export default function Dashboard() {
             Premium Candidate Workspace
           </span>
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold flex items-center gap-2.5 tracking-tight">
-            Welcome back, Vikas! <Sparkles className="h-6 w-6 text-amber-400 fill-current animate-pulse" />
+            Welcome back, {candidateFirstName}! <Sparkles className="h-6 w-6 text-amber-400 fill-current animate-pulse" />
           </h2>
           <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed font-normal">
             Your prep score is up 4% this week. You are currently in the top 15% of candidates preparers! Let's get you ready for your next big loop.

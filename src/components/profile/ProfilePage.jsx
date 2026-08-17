@@ -21,17 +21,19 @@ import {
 import AvatarUpload from './AvatarUpload';
 import { useToast } from '../ui/Toast';
 import { apiFetch } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ProfilePage() {
   const { addToast } = useToast();
+  const { user } = useAuth();
 
   // Personal Information State
   const [personalInfo, setPersonalInfo] = useState({
-    name: 'Vikas S.',
-    email: 'vikas@example.com',
-    targetJobTitle: 'Senior Full-Stack Engineer',
-    phone: '+1 (555) 234-5678',
-    location: 'San Francisco, CA'
+    name: user?.name || 'Candidate User',
+    email: user?.email || 'user@example.com',
+    targetJobTitle: user?.targetRole || 'Senior Full-Stack Engineer',
+    phone: '',
+    location: ''
   });
 
   // Avatar state
